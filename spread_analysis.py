@@ -24,17 +24,22 @@ X = sm.add_constant(combined[ticker2])
 model = sm.OLS(combined[ticker1], X).fit()
 beta = model.params[ticker2]
 
-spread = combined[ticker1] - beta * combined[ticker2]
-zscore = (spread - spread.mean()) / spread.std()
+z_threshold = 1
+
+combined['spread'] = combined[ticker1] - beta * combined[ticker2]
+combined['zscore'] = (combined['spread'] - combined['spread'].mean()) / combined['spread'].std()
 
 
 
-fig, axes = plt.subplots(1,2,figsize=(14, 10))
-axes[0].plot(zscore.index, zscore, label='Spread')
-axes[0].axhline(zscore.mean(), color='red', linestyle='--', label='Mean')
-axes[0].set_title(f"Z-score standardised spread between {ticker1} and {ticker2}")
-axes[0].set_ylabel("S.Ds from Mean")
-axes[0].legend()
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 10))
+axes[0].plot(combined.index, combined['zscore'], label='Z-score', color='blue')
+axes[0].axhline(0, color='black', linestyle='--', linewidth=1)
+axes[0].axhline(z_threshold, color='red', linestyle='--', label='+Threshold')
+axes[0].axhline(-z_threshold, color='green', linestyle='--', label='-Threshold')
+
+
+
 axes[1].plot(combined.index, combined[ticker1], label=ticker1)
 axes[1].plot(combined.index, combined[ticker2], label=ticker2)
 axes[1].set_title(f"Log Prices of {ticker1} and {ticker2}")
