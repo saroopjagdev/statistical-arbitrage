@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import numpy as np
 
-ticker1 = "GS"
+ticker1 = "RY"
 ticker2 = "WFC"
 
 start_date = "2000-01-01"
