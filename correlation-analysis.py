@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from statsmodels.tsa.stattools import coint
+
 results = []
+
 semiconductors = ["NVDA", "AMD", "INTC", "TSM", "AVGO", "QCOM", "ASML", "MU", "TXN", "SOXX", "SMH"]
 big_tech = ["AAPL", "MSFT", "GOOG", "META", "AMZN", "NFLX", "VGT", "ARKK"]
 etfs = ["SPY", "QQQ", "DIA", "IWM", "XLK", "XLF", "XLE", "XLY", "XLI", "XLP", "XLV", "XLB", "XLC", "XLRE", "EEM", "EWJ", "FXI"]
@@ -28,10 +30,15 @@ all_tickers = sum(groups.values(), [])
 data = yf.download(all_tickers, start="2020-01-01", end=dt.datetime.today().strftime('%Y-%m-%d'))
 
 log_prices = np.log(data["Close"].dropna(axis=1, how='all'))
-#print (log_prices)
 log_returns = log_prices.diff().dropna()
-corr_matrix = log_returns.corr()
+
+today = dt.datetime.today()
+corr_lookback = today - pd.DateOffset(years=2)
+coint_lookback = today - pd.DateOffset(years=5) 
+
 for name, tickers in groups.items():
+    log_returns_corr = log_returns[log_returns.index >= corr_lookback]
+    sub_corr = log_returns_corr[tickers].corr()
     sub_corr = log_returns[tickers].corr()
     stack = sub_corr.stack()
     filtered = stack[(stack > 0.8) & (stack < 1.0)]
@@ -39,13 +46,14 @@ for name, tickers in groups.items():
     filtered = filtered.to_frame().reset_index()
     filtered.columns = ["ticker1", "ticker2", "corr"]
     filtered = filtered[filtered['ticker1'] < filtered['ticker2']]
-    #print(filtered)
+    
     #plt.figure(figsize=(8, 6))
     #sns.heatmap(sub_corr, annot=False, cmap="coolwarm", linewidth=0.5)
     #plt.title(f"{name} - Correlation of Log Returns")
     #plt.tight_layout()
     #plt.show()
 
+    log_prices_coint = log_prices[log_prices.index >= coint_lookback]
     for i, row in filtered.iterrows():
         t1 = row['ticker1']
         t2 = row['ticker2']
@@ -65,5 +73,3 @@ for name, tickers in groups.items():
 coint_results = pd.DataFrame(results)
 
 print(coint_results)
-
-
